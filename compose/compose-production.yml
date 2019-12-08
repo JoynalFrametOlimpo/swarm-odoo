@@ -1,0 +1,46 @@
+version: '3.3'
+services:
+    db-production:
+        image: $DB_IMAGE:$DB_VERSION
+        container_name: db-production
+        restart: unless-stopped
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=$DB_USER
+            - POSTGRES_PASSWORD=$DB_PASSWORD
+            - POSTGRES_DB=postgres
+            
+        volumes:
+            - $DB_LOCAL_PATH:$DB_CONTAINER_PATH
+        networks:
+            - odoo-docker-production-network
+    odoo-production:
+        image: $ODOO_IMAGE:$ODOO_VERSION
+        container_name: odoo-production
+        restart: unless-stopped
+        depends_on:
+            - db-production
+        links:
+            - db-production
+        ports:
+            - "8057:8069"
+        volumes:
+            - $CONF_LOCAL_PATH:$CONF_CONTAINER_PATH
+            - $ADDONS_LOCAL_PATH:$ADDONS_CONTAINER_PATH
+            - $BCK_LOCAL:$BCK_CONTAINER
+            - $CORE_LOCAL_PATH:$CORE_CONTAINER_PATH
+        networks:
+           - odoo-docker-production-network
+        command: odoo 
+        environment:
+            - DB_PORT_5432_TCP_ADDR=db-production
+            - DB_PORT_5432_TCP_PORT=5432
+            - DB_ENV_POSTGRES_USER=$DB_USER
+            - DB_ENV_POSTGRES_PASSWORD=$DB_PASSWORD
+            - DB_ENV_POSTGRES_DB=postgres
+            - ADMIN_PASS=$ODOO_ADMIN_PASS
+networks:
+     odoo-docker-production:
+       driver: bridge
+
