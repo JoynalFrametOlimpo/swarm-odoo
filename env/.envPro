@@ -1,0 +1,27 @@
+## Parametros para odoo
+ODOO_IMAGE=odoo
+ODOO_VERSION=13.0
+ODOO_PROXY_MODE=true
+ODOO_ADMIN_PASS=*****password*****
+## --ODOO.CONF--------------
+CONF_LOCAL_PATH=/opt/odoo/13/conf
+CONF_CONTAINER_PATH=/etc/odoo
+## --CUSTOMS ADDONS ------------------
+ADDONS_LOCAL_PATH=/opt/odoo/13/extra-addons
+ADDONS_CONTAINER_PATH=/mnt/extra-addons
+## --ODOO BASE -------------------
+CORE_LOCAL_PATH=/opt/odoo/13/odoo-base
+CORE_CONTAINER_PATH=/var/lib/odoo
+
+
+## Parametros para postgresql
+DB_IMAGE=postgres
+DB_VERSION=11-alpine
+DB_NAME=db_odoo
+DB_USER=odoo
+DB_PASSWORD=******password****
+DB_filter=.*
+DB_LOCAL_PATH=/opt/odoo/13/database
+DB_CONTAINER_PATH=/var/lib/postgresql/data
+
+
