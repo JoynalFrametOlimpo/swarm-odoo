@@ -1,0 +1,61 @@
+version: '3.3'
+services:
+    db-develop:
+        image: $DB_IMAGE:$DB_VERSION
+        container_name: db-develop
+        restart: unless-stopped
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=$DB_USER
+            - POSTGRES_PASSWORD=$DB_PASSWORD
+            - POSTGRES_DB=postgres
+            
+        volumes:
+            - $DB_LOCAL_PATH:$DB_CONTAINER_PATH
+        networks:
+            - odoo-docker-develop-network
+    odoo-develop:
+        image: $ODOO_IMAGE:$ODOO_VERSION
+        container_name: odoo-develop
+        restart: unless-stopped
+        depends_on:
+            - db-develop
+        links:
+            - db-develop
+        ports:
+            - "8047:8069"
+        volumes:
+            - $CONF_LOCAL_PATH:$CONF_CONTAINER_PATH
+            - $ADDONS_LOCAL_PATH:$ADDONS_CONTAINER_PATH
+            - $BCK_LOCAL:$BCK_CONTAINER
+            - $CORE_LOCAL_PATH:$CORE_CONTAINER_PATH
+        networks:
+           - odoo-docker-develop-network
+        command: odoo 
+        environment:
+            - DB_PORT_5432_TCP_ADDR=db-develop
+            - DB_PORT_5432_TCP_PORT=5432
+            - DB_ENV_POSTGRES_USER=$DB_USER
+            - DB_ENV_POSTGRES_PASSWORD=$DB_PASSWORD
+            - DB_ENV_POSTGRES_DB=postgres
+            - ADMIN_PASS=$ODOO_ADMIN_PASS
+    pgadmin4-develop:
+        image: $PGADMIN_IMAGE:$PGADMIN_VERSION
+        container_name: pgadmin4-develop
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=$PGADMIN_MAIL
+            - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
+        ports:
+            - "5555:80"
+        depends_on:
+            - db-develop
+        links:
+            - db-develop
+        networks:
+            - odoo-docker-develop
+        restart: unless-stopped
+networks:
+     odoo-docker-develop:
+       driver: bridge
+
