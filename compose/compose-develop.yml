@@ -28,7 +28,6 @@ services:
         volumes:
             - $CONF_LOCAL_PATH:$CONF_CONTAINER_PATH
             - $ADDONS_LOCAL_PATH:$ADDONS_CONTAINER_PATH
-            - $BCK_LOCAL:$BCK_CONTAINER
             - $CORE_LOCAL_PATH:$CORE_CONTAINER_PATH
         networks:
            - odoo-docker-develop-network
@@ -53,9 +52,9 @@ services:
         links:
             - db-develop
         networks:
-            - odoo-docker-develop
+            - odoo-docker-develop-network
         restart: unless-stopped
 networks:
-     odoo-docker-develop:
+     odoo-docker-develop-network:
        driver: bridge
 

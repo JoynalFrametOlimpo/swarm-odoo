@@ -41,6 +41,6 @@ services:
             - DB_ENV_POSTGRES_DB=postgres
             - ADMIN_PASS=$ODOO_ADMIN_PASS
 networks:
-     odoo-docker-production:
+     odoo-docker-production-network:
        driver: bridge
 
