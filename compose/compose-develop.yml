@@ -31,7 +31,7 @@ services:
             - $CORE_LOCAL_PATH:$CORE_CONTAINER_PATH
         networks:
            - odoo-docker-develop-network
-        command: odoo 
+        command: odoo  -i base
         environment:
             - DB_PORT_5432_TCP_ADDR=db-develop
             - DB_PORT_5432_TCP_PORT=5432

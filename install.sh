@@ -69,22 +69,18 @@ docker build -f ./Dockerfile -t odoo:13.0 . --force-rm
 # Create and stop project
 if [ ! -d /opt/odoo/13 ]; then
     mkdir -p /opt/odoo/13 
-#    echo "$(tput setaf 4)************************** Up Service ****************************************$(tput setaf 3)"
-#    docker-compose up -d
-#    echo "$(tput setaf 4)************************* Stop Services **************************************$(tput setaf 3)"
-#    docker-compose stop
 fi
 
 # Copy odoo configuration file in new project
 if [ ! -f /opt/odoo/13/conf/odoo.conf ]; then
     echo "$(tput setaf 4)***************** Copiando archivo odoo.conf en ruta de proyecto*********************$(tput setaf 3)"
-    cp ./odoo.conf /opt/odoo/13/conf
+    mkdir /opt/odoo/13/conf/ &&  cp ./odoo.conf /opt/odoo/13/conf/
 fi
 
 # Copy nginx configuration file in new project
 if [ ! -f /opt/odoo/13/nginx/nginx.conf ]; then
    echo "$(tput setaf 4)***************** Copiando archivo nginx.conf en ruta de proyecto*********************$(tput setaf 3)"
-   cp nginx/nginx.conf /opt/odoo/13/nginx
+   mkdir /opt/odoo/13/nginx/ && cp ./nginx/nginx.conf /opt/odoo/13/nginx/
 fi
 
 if [ $environment -eq 1 ]; then
@@ -141,7 +137,7 @@ if [ $isDomain -eq 1 ]; then
      rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/privkey.pem
      cp /etc/letsencrypt/live/$DOMINIO/privkey.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
 
-     cp nginx/options-ssl-nginx.conf /opt/odoo/13/certbot/conf/
+     cp ./nginx/options-ssl-nginx.conf /opt/odoo/13/certbot/conf/
      openssl dhparam -dsaparam -out /opt/odoo/13/certbot/conf/ssl-dhparams.pem 4096
      echo "$(tput setaf 4)Proceder a cambiar contraseñas en .ENV... y configuracion en /opt/odoo/13/nginx/nginx.conf $(tput setaf 3)"
   fi
@@ -149,7 +145,8 @@ fi
 fi
 
 #chmod -R 777 /opt/odoo/13
-
+chmod +x ./entrypoint.sh ./wait-for-psql.py
+chmod -R 777 /opt/odoo/13/
 echo "$(tput setaf 1)****************** Levantando Servicios *******************************$(tput setaf 3)"
 docker-compose up -d
 
