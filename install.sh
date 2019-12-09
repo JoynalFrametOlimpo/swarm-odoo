@@ -64,7 +64,7 @@ if [ $environment -eq 2 ]; then
 fi
 
 echo "$(tput setaf 4)******************************* Building image Odoo 13 *********************************$(tput setaf 3)"
-docker build -f ./Dockerfile -t odoo:13 . --force-rm
+docker build -f ./Dockerfile -t odoo:13.0 . --force-rm
 
 # Create and stop project
 if [ ! -d /opt/odoo/13 ]; then
