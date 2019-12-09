@@ -56,24 +56,24 @@ fi
 
 if [ $environment -eq 1 ]; then
     ln -s compose/compose-production.yml docker-compose.yml
-    cp compose/.envPro .env
+    cp env/.envPro .env
 fi
 if [ $environment -eq 2 ]; then
     ln -s compose/compose-develop.yml docker-compose.yml
-    cp compose/.envDev .env
+    cp env/.envDev .env
 fi
 
 echo "$(tput setaf 4)******************************* Building image Odoo 13 *********************************$(tput setaf 3)"
-docker build -t odoo:13 .
+docker build -f ./Dockerfile -t odoo:13 . --force-rm
 
 # Create and stop project
-#if [ ! -d /opt/odoo/13 ]; then
-#    mkdir -p /opt/odoo/13 
+if [ ! -d /opt/odoo/13 ]; then
+    mkdir -p /opt/odoo/13 
 #    echo "$(tput setaf 4)************************** Up Service ****************************************$(tput setaf 3)"
 #    docker-compose up -d
 #    echo "$(tput setaf 4)************************* Stop Services **************************************$(tput setaf 3)"
 #    docker-compose stop
-#fi
+fi
 
 # Copy odoo configuration file in new project
 if [ ! -f /opt/odoo/13/conf/odoo.conf ]; then
@@ -84,7 +84,7 @@ fi
 # Copy nginx configuration file in new project
 if [ ! -f /opt/odoo/13/nginx/nginx.conf ]; then
    echo "$(tput setaf 4)***************** Copiando archivo nginx.conf en ruta de proyecto*********************$(tput setaf 3)"
-   cp ./nginx.conf /opt/odoo/13/nginx
+   cp nginx/nginx.conf /opt/odoo/13/nginx
 fi
 
 if [ $environment -eq 1 ]; then
@@ -141,7 +141,7 @@ if [ $isDomain -eq 1 ]; then
      rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/privkey.pem
      cp /etc/letsencrypt/live/$DOMINIO/privkey.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
 
-     cp ./certbot-conf/options-ssl-nginx.conf /opt/odoo/13/certbot/conf/
+     cp nginx/options-ssl-nginx.conf /opt/odoo/13/certbot/conf/
      openssl dhparam -dsaparam -out /opt/odoo/13/certbot/conf/ssl-dhparams.pem 4096
      echo "$(tput setaf 4)Proceder a cambiar contraseñas en .ENV... y configuracion en /opt/odoo/13/nginx/nginx.conf $(tput setaf 3)"
   fi
