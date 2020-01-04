@@ -1,18 +1,45 @@
 # Ticgobi Config and Install Odoo Server
 # Author: JoynalFrametOlimpo
+dt=$(date '+%d-%m-%Y--%H-%M-%S')
 
 echo "$(tput setaf 4)********************** ENVIRONMENT *************************************$(tput setaf 3)"
 echo "Production (1)..."
 echo "Development (2)..."
 read environment
 
+# For backup environment directory
+if [ ! -d ./backup-environment ]; then
+    mkdir ./backup-environment
+fi
+
+if [ $environment -eq 1 ]; then
+   ODOO_PATH="./odoo-production"
+   ln -s compose/compose-production.yml docker-compose.yml
+   cp env/.envPro .env
+   if [ -d ./odoo-production ]; then
+       mv ./odoo-production "./backup-environment/odoo-production.$dt"
+   fi
+fi
+
+if [ $environment -eq 2 ]; then
+   ODOO_PATH="./odoo-develop"
+   ln -s compose/compose-develop.yml docker-compose.yml
+   cp env/.envDev .env
+   if [ -d ./odoo-develop ]; then
+       mv ./odoo-develop "./backup-environment/odoo-develop.$dt"
+   fi
+fi
+
+rm -rf "$ODOO_PATH"
+
 # OS version
 . /etc/os-release
 SO=$ID
 
 # Date Config
-cp /usr/share/zoneinfo/America/Guayaquil /etc/localtime 
-
+if [ -f /etc/localtime/ ]; then
+  cp /usr/share/zoneinfo/America/Guayaquil /etc/localtime 
+fi
 
 # Install docker and docker-compose Centos
 if [ "$SO" = "centos" ]; then
@@ -42,45 +69,39 @@ fi
 
 if [ "$SO" = "ubuntu" ]; then
      echo "$(tput setaf 4)***************** UPGRADE SO ************************************************$(tput setaf 3)"
-     apt-get upgrade
+     apt-get upgrade -y
      echo "$(tput setaf 4)***************** UPDATE SO ************************************************$(tput setaf 3)"
-     apt-get update
+     apt-get update -y
      echo "$(tput setaf 4)***************** INSTALL DOCKER ******************************************$(tput setaf 3)"
      apt-get -y install docker.io --no-install-recommends
      echo "$(tput setaf 4)***************** INSTALL DOCKER-COMPOSE******************************************$(tput setaf 3)"
      apt-get -y install docker-compose --no-install-recommends
      echo "$(tput setaf 4)***************** INFORMATION DOCKER******************************************$(tput setaf 3)"
+     groupadd docker
+     usermod -aG docker $USER
      docker version
      docker-compose version
 fi
 
-if [ $environment -eq 1 ]; then
-    ln -s compose/compose-production.yml docker-compose.yml
-    cp env/.envPro .env
-fi
-if [ $environment -eq 2 ]; then
-    ln -s compose/compose-develop.yml docker-compose.yml
-    cp env/.envDev .env
+
+if [ ! -d "$ODOO_PATH/13" ]; then
+    mkdir -p "$ODOO_PATH/13"
 fi
 
 echo "$(tput setaf 4)******************************* Building image Odoo 13 *********************************$(tput setaf 3)"
 docker build -f ./Dockerfile -t odoo:13.0 . --force-rm
 
-# Create and stop project
-if [ ! -d /opt/odoo/13 ]; then
-    mkdir -p /opt/odoo/13 
-fi
 
 # Copy odoo configuration file in new project
-if [ ! -f /opt/odoo/13/conf/odoo.conf ]; then
+if [ ! -f "$ODOO_PATH/13/conf/odoo.conf" ]; then
     echo "$(tput setaf 4)***************** Copiando archivo odoo.conf en ruta de proyecto*********************$(tput setaf 3)"
-    mkdir /opt/odoo/13/conf/ &&  cp ./odoo.conf /opt/odoo/13/conf/
+    mkdir "$ODOO_PATH/13/conf/" &&  cp ./odoo.conf "$ODOO_PATH/13/conf/"
 fi
 
 # Copy nginx configuration file in new project
-if [ ! -f /opt/odoo/13/nginx/nginx.conf ]; then
+if [ ! -f "$ODOO_PATH/13/nginx/nginx.conf" ]; then
    echo "$(tput setaf 4)***************** Copiando archivo nginx.conf en ruta de proyecto*********************$(tput setaf 3)"
-   mkdir /opt/odoo/13/nginx/ && cp ./nginx/nginx.conf /opt/odoo/13/nginx/
+   mkdir "$ODOO_PATH/13/nginx/" && cp ./nginx/nginx.conf "$ODOO_PATH/13/nginx/"
 fi
 
 if [ $environment -eq 1 ]; then
@@ -122,31 +143,33 @@ if [ $isDomain -eq 1 ]; then
    fi
 
    # Copy certificates
-   if [ ! -d /opt/odoo/13/certbot/conf/live ]; then
-     cp -R /etc/letsencrypt/live/ /opt/odoo/13/certbot/conf/
+   if [ ! -d "$ODOO_PATH/13/certbot/conf/live" ]; then
+     cp -R /etc/letsencrypt/live/ "$ODOO_PATH/13/certbot/conf/"
    
-     rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/cert.pem
-     cp /etc/letsencrypt/live/$DOMINIO/cert.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
+     rm -f "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/cert.pem"
+     cp /etc/letsencrypt/live/$DOMINIO/cert.pem "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/"
 
-     rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/chain.pem
-     cp /etc/letsencrypt/live/$DOMINIO/chain.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
+     rm -f "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/chain.pem"
+     cp /etc/letsencrypt/live/$DOMINIO/chain.pem "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/"
 
-     rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/fullchain.pem
-     cp /etc/letsencrypt/live/$DOMINIO/fullchain.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
+     rm -f "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/fullchain.pem"
+     cp /etc/letsencrypt/live/$DOMINIO/fullchain.pem "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/"
 
-     rm -f /opt/odoo/13/certbot/conf/live/$DOMINIO/privkey.pem
-     cp /etc/letsencrypt/live/$DOMINIO/privkey.pem /opt/odoo/13/certbot/conf/live/$DOMINIO/
+     rm -f "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/privkey.pem"
+     cp /etc/letsencrypt/live/$DOMINIO/privkey.pem "$ODOO_PATH/13/certbot/conf/live/$DOMINIO/"
 
-     cp ./nginx/options-ssl-nginx.conf /opt/odoo/13/certbot/conf/
-     openssl dhparam -dsaparam -out /opt/odoo/13/certbot/conf/ssl-dhparams.pem 4096
-     echo "$(tput setaf 4)Proceder a cambiar contraseñas en .ENV... y configuracion en /opt/odoo/13/nginx/nginx.conf $(tput setaf 3)"
+     cp ./nginx/options-ssl-nginx.conf "$ODOO_PATH/13/certbot/conf/"
+     openssl dhparam -dsaparam -out "$ODOO_PATH/13/certbot/conf/ssl-dhparams.pem" 4096
+     echo "$(tput setaf 4)Proceder a cambiar contraseñas en .ENV... y configuracion en".$ODOO_PATH."13/nginx/nginx.conf $(tput setaf 3)"
   fi
 fi
 fi
 
-#chmod -R 777 /opt/odoo/13
+
 chmod +x ./entrypoint.sh ./wait-for-psql.py
-chmod -R 777 /opt/odoo/13/
+chmod -R 777 "$ODOO_PATH/13/"
 echo "$(tput setaf 1)****************** Levantando Servicios *******************************$(tput setaf 3)"
+docker rm -f $(docker ps -a -q)
 docker-compose up -d
 
+chmod -R 777 "$ODOO_PATH/13/"

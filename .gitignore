@@ -1,3 +1,7 @@
 docker-compose.yml
 *.swp
 .env
+odoo-develop
+odoo-production
+backup-environment/
+install.sh.save
